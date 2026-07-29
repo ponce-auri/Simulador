@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autonodrive - Simulador de Conducción Autónoma 3D</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Google Fonts para tipografía moderna -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Contenedor del Canvas 3D -->
+    <div id="canvas-container"></div>
+
+    <!-- HUD (Head-Up Display) con Estética Glassmorphism -->
+    <div id="hud">
+        <!-- Encabezado / Logo -->
+        <header class="hud-header">
+            <h1 class="logo">AUTONODRIVE <span class="badge">v1.0</span></h1>
+            <div class="fps-counter" id="fps-display">60 FPS</div>
+        </header>
+
+        <!-- Indicadores de Velocidad y Marcha -->
+        <section class="hud-main">
+            <div class="speedometer">
+                <div class="digital-speed" id="speed-val">0</div>
+                <div class="speed-unit">KM/H</div>
+            </div>
+            <div class="transmission">
+                <span class="gear" id="gear-P">P</span>
+                <span class="gear active" id="gear-D">D</span>
+                <span class="gear" id="gear-R">R</span>
+            </div>
+        </section>
+
+        <!-- Gráfico del Estado del Piloto Automático y Sensores -->
+        <section class="hud-status">
+            <div class="autopilot-toggle-container">
+                <button id="start-autopilot-btn" class="btn btn-start active">▶ INICIAR</button>
+                <button id="stop-autopilot-btn" class="btn btn-stop">⏹ DETENER</button>
+            </div>
+            <!-- Panel de Navegación GPS autónoma -->
+            <div class="sign-recognition-panel gps-panel">
+                <div class="gps-header">
+                    <h3 class="panel-title">NAVEGACIÓN GPS</h3>
+                    <button id="next-dest-btn" class="btn-dest-change" title="Cambiar Destino">🔄 RUTA</button>
+                </div>
+                <div class="sign-display">
+                    <div class="sign-info" style="width: 100%;">
+                        <div class="gps-target-row">
+                            <div id="nav-target-name" class="sign-name">🏢 Distrito Financiero</div>
+                            <div id="nav-distance" class="nav-dist-tag">0 m</div>
+                        </div>
+                        <div id="nav-status" class="sign-desc" style="color: var(--accent-cyan);">Calculando ruta óptima...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Panel de Reconocimiento de Señales de Tránsito -->
+            <div class="sign-recognition-panel">
+                <h3 class="panel-title">SEÑALIZACIÓN VIAL</h3>
+                <div class="sign-display">
+                    <div class="sign-icons">
+                        <div id="speed-limit-icon" class="speed-limit-icon">50</div>
+                        <div id="traffic-light-status" class="traffic-light-status none"></div>
+                        <div id="action-sign-icon" class="action-sign none">STOP</div>
+                    </div>
+                    <div class="sign-info">
+                        <div id="sign-detected-name" class="sign-name">Sin Señales</div>
+                        <div id="sign-detected-desc" class="sign-desc">Límite estándar de la vía</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Panel de Reconocimiento de Entidades y Obstáculos -->
+            <div class="sign-recognition-panel entity-panel">
+                <h3 class="panel-title">ENTORNO Y OBSTÁCULOS</h3>
+                <div class="sign-display">
+                    <div class="sign-icons">
+                        <div id="entity-icon" class="entity-icon">🟢</div>
+                    </div>
+                    <div class="sign-info">
+                        <div id="entity-detected-name" class="sign-name">Camino Libre</div>
+                        <div id="entity-detected-desc" class="sign-desc">Distancia de seguridad OK</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="sensor-panel">
+                <h3 class="panel-title">SENSORES LIDAR (RAYCAST)</h3>
+                <div class="sensor-bars">
+                    <div class="sensor-item">
+                        <span class="sensor-label">IZQ</span>
+                        <div class="bar-container">
+                            <div class="bar" id="sensor-left" style="width: 100%;"></div>
+                        </div>
+                        <span class="sensor-val" id="sensor-left-val">Max</span>
+                    </div>
+                    <div class="sensor-item">
+                        <span class="sensor-label">CEN</span>
+                        <div class="bar-container">
+                            <div class="bar" id="sensor-center" style="width: 100%;"></div>
+                        </div>
+                        <span class="sensor-val" id="sensor-center-val">Max</span>
+                    </div>
+                    <div class="sensor-item">
+                        <span class="sensor-label">DER</span>
+                        <div class="bar-container">
+                            <div class="bar" id="sensor-right" style="width: 100%;"></div>
+                        </div>
+                        <span class="sensor-val" id="sensor-right-val">Max</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Barra inferior con controles y alternancia de cámaras -->
+        <footer class="hud-footer">
+            <div class="camera-control">
+                <span class="cam-label">CÁMARA:</span>
+                <button id="cam-btn" class="btn btn-cam">3ª PERSONA</button>
+            </div>
+            <div class="controls-guide">
+                <p><strong>Controles:</strong> WASD / Flechas para Conducir | <strong>Espacio</strong>: Freno | <strong>C</strong>: Cámara | <strong>P</strong>: Piloto Aut.</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Indicador de alerta de colisión inminente (oculto por defecto) -->
+    <div id="collision-alert" class="collision-alert hidden">¡ADVERTENCIA DE COLISIÓN!</div>
+
+    <!-- Carga del Módulo Principal -->
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
